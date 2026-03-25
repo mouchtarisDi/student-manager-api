@@ -1,0 +1,11 @@
+# Λεει στο git ποια αρχεια να δεν θελλουμε να παρακολουθει.
+# Ειναι για να μην ανεβαινουν προσωρινα αρχεια Python, 
+# local virtual environment, το πραγματικο .env και editor-specific files
+
+__pycache__/
+*.pyc
+.venv/
+.env
+.idea/
+.vscode/
+.pytest_cache/
