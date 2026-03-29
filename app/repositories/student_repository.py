@@ -84,4 +84,3 @@ class StudentRepository:
         """
         self.db.delete(student)
         self.db.commit()
-        """"""

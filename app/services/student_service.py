@@ -1,4 +1,3 @@
-# Κραταει το business logic, Βρισκεται αναμεσα σε routes και repositories
 """
 Student service layer.
 
@@ -10,9 +9,9 @@ Why services are useful:
 - business rules live in one place
 """
 
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import NotFoundError
 from app.repositories.student_repository import StudentRepository
 from app.schemas.student import StudentCreate
 
@@ -22,14 +21,31 @@ class StudentService:
     Service responsible for student-related business operations.
     """
 
-    def __init__(self, db: Session) -> None:
+    def __init__(
+        self,
+        db: Session | None = None,
+        repository: StudentRepository | None = None,
+    ) -> None:
         """
-        Initialize the service with a database session.
+        Initialize the service.
+
+        The service can be initialized either with:
+        - a database session, from which a repository will be created, or
+        - a repository instance directly, which is useful in unit tests
 
         Args:
             db: Active SQLAlchemy session.
+            repository: Optional repository instance.
+
+        Raises:
+            ValueError: If neither db nor repository is provided.
         """
-        self.repository = StudentRepository(db)
+        if repository is not None:
+            self.repository = repository
+        elif db is not None:
+            self.repository = StudentRepository(db)
+        else:
+            raise ValueError("Either db or repository must be provided.")
 
     def create_student(self, student_in: StudentCreate):
         """
@@ -60,17 +76,14 @@ class StudentService:
             student_id: Student primary key.
 
         Raises:
-            HTTPException: If the student does not exist.
+            NotFoundError: If the student does not exist.
 
         Returns:
             The matching student ORM object.
         """
         student = self.repository.get_by_id(student_id)
-        if not student:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Student not found.",
-            )
+        if student is None:
+            raise NotFoundError("Student not found.")
         return student
 
     def delete_student(self, student_id: int) -> None:
@@ -81,12 +94,9 @@ class StudentService:
             student_id: Student primary key.
 
         Raises:
-            HTTPException: If the student does not exist.
+            NotFoundError: If the student does not exist.
         """
         student = self.repository.get_by_id(student_id)
-        if not student:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Student not found.",
-            )
+        if student is None:
+            raise NotFoundError("Student not found.")
         self.repository.delete(student)

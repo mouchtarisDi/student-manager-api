@@ -9,9 +9,10 @@ Routes are responsible for:
 - returning HTTP responses
 """
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import NotFoundError
 from app.db.session import get_db
 from app.schemas.student import StudentCreate, StudentResponse
 from app.services.student_service import StudentService
@@ -31,7 +32,7 @@ def create_student(student_in: StudentCreate, db: Session = Depends(get_db)):
     Returns:
         The created student as API response data.
     """
-    service = StudentService(db)
+    service = StudentService(db=db)
     return service.create_student(student_in)
 
 
@@ -46,7 +47,7 @@ def list_students(db: Session = Depends(get_db)):
     Returns:
         A list of students.
     """
-    service = StudentService(db)
+    service = StudentService(db=db)
     return service.list_students()
 
 
@@ -65,8 +66,15 @@ def get_student(student_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: If the student does not exist.
     """
-    service = StudentService(db)
-    return service.get_student(student_id)
+    service = StudentService(db=db)
+
+    try:
+        return service.get_student(student_id)
+    except NotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
 
 
 @router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -81,6 +89,14 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     Returns:
         Empty response with HTTP 204 status code.
     """
-    service = StudentService(db)
-    service.delete_student(student_id)
+    service = StudentService(db=db)
+
+    try:
+        service.delete_student(student_id)
+    except NotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
