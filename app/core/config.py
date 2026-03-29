@@ -1,33 +1,30 @@
 """
-Application configuration settings.
+Application configuration module.
 
-This module is responsible for loading the application's settings from environment
-variable. It centralizes configuration in one place, so the rest of the codebase
-does not need to read environment variables directly.
+This module loads the application's settings from environment variables.
 
-Why thiw is useful:
--avoids hardcoded values
--makes the app easier to configure perenvironment
--keeps secrets and environment-specific values outside the source code
+Why this is useful:
+- avoids hardcoded values
+- centralizes configuration
+- makes different environments easier to support
+  (development, test, production, etc.)
 """
-# Διαβαζει τιμες απο env variables και τις πετατρεπει σε σωστους Python τυπους.
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     """
-    Aplication settings loaded from environment variables.
-    
-    Each attribure is automatically populated from the '.env' file or from real environment
-    variables in the operating system / container.
+    Application settings loaded from environment variables.
 
     Attributes:
-    app_name: The display name of the application.
-    app_env: The current environment (e.g., development, production).
-    app_debug: Whether to enable debug mode (True/False).
-    database_url: The connection URL for the database.
+        app_name: Human-readable application name.
+        app_env: Current environment (development, test, production).
+        app_debug: Whether debug mode is enabled.
+        database_url: Database connection string.
     """
 
-    app_name: str = "Student Center Api"
+    app_name: str = "Student Center API"
     app_env: str = "development"
     app_debug: bool = True
     database_url: str
@@ -38,5 +35,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-# Δημιουργουμε ενα ετοιμο object για να το εισαγουμε οπου χρειαστει.
+    @property
+    def is_test(self) -> bool:
+        """
+        Return True when the application is running in test mode.
+
+        This helps us disable production-style startup behavior during tests.
+        """
+        return self.app_env.lower() == "test"
+
+
 settings = Settings()

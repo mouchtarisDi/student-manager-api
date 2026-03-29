@@ -2,11 +2,14 @@
 Main application entry point.
 
 This module creates the FastAPI application instance,
-registers all routes, and initializes database tables.
+registers all routes, and initializes startup behavior.
 
 Important note:
-For now we use Base.metadata.create_all() to create tables automatically.
-Later in the project, Alembic migrations will replace this behavior.
+In development/production-like environments, the app waits for the DB
+and creates tables on startup.
+
+In test mode, this startup DB logic is skipped because tests provide
+their own isolated database setup.
 """
 
 from contextlib import asynccontextmanager
@@ -25,25 +28,20 @@ async def lifespan(app: FastAPI):
     """
     Application lifespan handler.
 
-    Code before `yield` runs during application startup.
-    Code after `yield` runs during application shutdown.
-
-    During startup we:
-    1. wait for the database to be ready
-    2. create database tables for registered models
-
-    This startup flow is safer in containerized environments because
-    the database service may need a few seconds before it can accept
-    connections.
+    Startup logic:
+    - In normal app environments, wait for the DB and create tables.
+    - In test mode, skip this logic because tests manage their own DB setup.
 
     Args:
         app: The FastAPI application instance.
 
     Yields:
-        None. Control is passed back to FastAPI after startup finishes.
+        Control back to FastAPI once startup completes.
     """
-    wait_for_db()
-    Base.metadata.create_all(bind=engine)
+    if not settings.is_test:
+        wait_for_db()
+        Base.metadata.create_all(bind=engine)
+
     yield
 
 

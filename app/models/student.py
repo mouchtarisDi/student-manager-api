@@ -5,7 +5,7 @@ Student ORM model.
 This module defines the database representation of a student.
 
 A model describes:
-- the table name 
+- the table name
 -the columns of the table
 - the data types stored in the database
 
@@ -13,10 +13,12 @@ This is different from API schemas:
 models are for the database,
 schemas are for request/response validation
 """
+
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.session import Base
+
 
 class Student(Base):
     """
