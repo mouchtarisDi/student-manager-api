@@ -1,4 +1,5 @@
-# Υπευθυνο για: συνδεση με τη βαση, το SQLAlchemy engine, τα sessions και το base class των models
+# Υπευθυνο για: συνδεση με τη βαση, το SQLAlchemy engine,
+#  τα sessions και το base class των models
 """
 Database session and engine configuration.
 
